@@ -1,0 +1,7 @@
+# Additionally required to run the TensorRT and Triton backends. These are
+# Linux/CUDA wheels; the harness reports the backends as unavailable rather
+# than guessing when they are missing.
+-r requirements.txt
+tensorrt>=10.0
+cuda-python>=12.4
+tritonclient[http,grpc]>=2.45

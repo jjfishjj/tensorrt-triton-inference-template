@@ -1,0 +1,163 @@
+{
+  "model": "resnet18",
+  "batch": 32,
+  "iterations": 15,
+  "warmup": 5,
+  "host": {
+    "machine": "arm64",
+    "processor": "arm",
+    "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "python": "3.13.7"
+  },
+  "reference": "pytorch-cpu",
+  "results": [
+    {
+      "backend": "pytorch-cpu",
+      "available": true,
+      "reason": "",
+      "error": "",
+      "latency": {
+        "backend": "pytorch-cpu",
+        "batch": 32,
+        "iterations": 15,
+        "warmup": 5,
+        "mean_ms": 1560.7352417333334,
+        "p50_ms": 1480.642833,
+        "p90_ms": 2185.523667,
+        "p99_ms": 2608.025875,
+        "min_ms": 1081.536292,
+        "max_ms": 2608.025875,
+        "stdev_ms": 394.6148583875197,
+        "throughput_ips": 20.503157194336943
+      }
+    },
+    {
+      "backend": "pytorch-mps",
+      "available": true,
+      "reason": "",
+      "error": "",
+      "latency": {
+        "backend": "pytorch-mps",
+        "batch": 32,
+        "iterations": 15,
+        "warmup": 5,
+        "mean_ms": 144.020389,
+        "p50_ms": 136.314042,
+        "p90_ms": 195.915625,
+        "p99_ms": 210.261625,
+        "min_ms": 121.020084,
+        "max_ms": 210.261625,
+        "stdev_ms": 25.54090093600857,
+        "throughput_ips": 222.19076217048683
+      }
+    },
+    {
+      "backend": "pytorch-cuda",
+      "available": false,
+      "reason": "no CUDA device",
+      "error": "",
+      "latency": null
+    },
+    {
+      "backend": "onnxruntime-cpu",
+      "available": true,
+      "reason": "",
+      "error": "",
+      "latency": {
+        "backend": "onnxruntime-cpu",
+        "batch": 32,
+        "iterations": 15,
+        "warmup": 5,
+        "mean_ms": 1283.0469,
+        "p50_ms": 1165.947125,
+        "p90_ms": 1541.629583,
+        "p99_ms": 2312.91575,
+        "min_ms": 1023.076,
+        "max_ms": 2312.91575,
+        "stdev_ms": 313.30775017932535,
+        "throughput_ips": 24.94063155446617
+      }
+    },
+    {
+      "backend": "onnxruntime-coreml",
+      "available": true,
+      "reason": "",
+      "error": "",
+      "latency": {
+        "backend": "onnxruntime-coreml",
+        "batch": 32,
+        "iterations": 15,
+        "warmup": 5,
+        "mean_ms": 20.214636133333332,
+        "p50_ms": 19.9615,
+        "p90_ms": 21.8455,
+        "p99_ms": 23.152917,
+        "min_ms": 18.768917,
+        "max_ms": 23.152917,
+        "stdev_ms": 1.1815669632386119,
+        "throughput_ips": 1583.0114274099128
+      }
+    },
+    {
+      "backend": "onnxruntime-cuda",
+      "available": false,
+      "reason": "CUDAExecutionProvider not built into this wheel",
+      "error": "",
+      "latency": null
+    },
+    {
+      "backend": "onnxruntime-tensorrt",
+      "available": false,
+      "reason": "TensorrtExecutionProvider not built into this wheel",
+      "error": "",
+      "latency": null
+    },
+    {
+      "backend": "tensorrt-fp32",
+      "available": false,
+      "reason": "tensorrt not installed (No module named 'tensorrt')",
+      "error": "",
+      "latency": null
+    },
+    {
+      "backend": "tensorrt-fp16",
+      "available": false,
+      "reason": "tensorrt not installed (No module named 'tensorrt')",
+      "error": "",
+      "latency": null
+    },
+    {
+      "backend": "triton-http",
+      "available": false,
+      "reason": "tritonclient not installed (No module named 'tritonclient')",
+      "error": "",
+      "latency": null
+    }
+  ],
+  "accuracy": {
+    "pytorch-mps": {
+      "backend": "pytorch-mps",
+      "reference": "pytorch-cpu",
+      "samples": 8,
+      "max_abs_diff": 6.67572021484375e-06,
+      "mean_abs_diff": 8.565401149098761e-07,
+      "top1_agreement": 1.0
+    },
+    "onnxruntime-cpu": {
+      "backend": "onnxruntime-cpu",
+      "reference": "pytorch-cpu",
+      "samples": 8,
+      "max_abs_diff": 6.198883056640625e-06,
+      "mean_abs_diff": 8.56156948429998e-07,
+      "top1_agreement": 1.0
+    },
+    "onnxruntime-coreml": {
+      "backend": "onnxruntime-coreml",
+      "reference": "pytorch-cpu",
+      "samples": 8,
+      "max_abs_diff": 0.012020111083984375,
+      "mean_abs_diff": 0.0026697721677119263,
+      "top1_agreement": 1.0
+    }
+  }
+}

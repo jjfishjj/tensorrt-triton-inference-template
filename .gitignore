@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Regenerable: `inferbench export` rebuilds the ONNX from deterministic weights,
+# and TensorRT engines are hardware-specific and must never be shared.
+artifacts/
+model_repository/
