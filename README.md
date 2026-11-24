@@ -109,7 +109,7 @@ On a supported NVIDIA GPU, install `requirements-gpu.txt` and opt in to board
 energy measurement:
 
 ```bash
-PYTHONPATH=src python -m inferbench.cli bench --model resnet18 --batch 32 \
+PYTHONPATH=src python -m inferbench.cli --model resnet18 bench --batch 32 \
   --iterations 200 --warmup 30 --energy --energy-idle-seconds 5
 ```
 
