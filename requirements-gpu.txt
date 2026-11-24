@@ -2,6 +2,6 @@
 # Linux/CUDA wheels; the harness reports the backends as unavailable rather
 # than guessing when they are missing.
 -r requirements.txt
-tensorrt>=10.0
-cuda-python>=12.4
-tritonclient[http,grpc]>=2.45
+tensorrt==10.3.0
+cuda-python==12.4.0
+tritonclient[http,grpc]==2.48.0

@@ -34,6 +34,7 @@ class LatencyStats:
     max_ms: float
     stdev_ms: float
     throughput_ips: float          # inferences per second
+    samples_seconds: list[float] = field(default_factory=list)
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -80,8 +81,11 @@ def measure(backend, spec, batch: int = 1, iterations: int = 100,
         backend=backend.name, batch=batch, iterations=iterations, warmup=warmup,
         mean_ms=mean, p50_ms=pct(0.50), p90_ms=pct(0.90), p99_ms=pct(0.99),
         min_ms=samples[0], max_ms=samples[-1],
+        # Population stdev: these are the complete samples collected for this
+        # benchmark run, and report.py uses the same definition.
         stdev_ms=statistics.pstdev(samples),
         throughput_ips=batch / (mean / 1000.0),
+        samples_seconds=[sample / 1000.0 for sample in samples],
     )
 
 

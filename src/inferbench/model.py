@@ -66,6 +66,7 @@ def export_onnx(name: str, out_dir: Path, opset: int = 18,
     the throughput sweep meaningless, so the batch dimension stays symbolic all
     the way through to the TensorRT optimisation profile.
     """
+    import inspect
     import torch
 
     out_dir = Path(out_dir)
@@ -74,16 +75,24 @@ def export_onnx(name: str, out_dir: Path, opset: int = 18,
 
     model = build_torch_model(name)
     dummy = torch.randn(1, *input_shape)
-    # torch>=2.9 exports through dynamo, which wants `dynamic_shapes` with a
-    # real Dim rather than the older `dynamic_axes` string map; passing the old
-    # one still works but warns that it may violate constraints.
-    batch = torch.export.Dim("batch")
-    torch.onnx.export(
-        model, (dummy,), str(path),
-        input_names=["input"], output_names=["output"],
-        dynamic_shapes={"x": {0: batch}} if name == "resnet18" else ({0: batch},),
-        opset_version=opset, dynamo=True,
-    )
+    # Torch 2.4's exporter uses dynamic_axes; newer dynamo exporters use a
+    # real torch.export.Dim in dynamic_shapes. Keep the pinned CPU dependency
+    # working while retaining the symbolic batch axis on both APIs.
+    if "dynamic_shapes" in inspect.signature(torch.onnx.export).parameters:
+        batch = torch.export.Dim("batch")
+        torch.onnx.export(
+            model, (dummy,), str(path),
+            input_names=["input"], output_names=["output"],
+            dynamic_shapes={"x": {0: batch}} if name == "resnet18" else ({0: batch},),
+            opset_version=opset, dynamo=True,
+        )
+    else:
+        torch.onnx.export(
+            model, (dummy,), str(path),
+            input_names=["input"], output_names=["output"],
+            dynamic_axes={"input": {0: "batch"}, "output": {0: "batch"}},
+            opset_version=opset,
+        )
     with torch.no_grad():
         out = model(dummy)
     return ModelSpec(name=name, input_shape=input_shape,

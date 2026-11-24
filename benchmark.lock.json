@@ -1,0 +1,33 @@
+{
+  "lock_version": "1",
+  "purpose": "Human-readable benchmark manifest; not a resolver-generated dependency lock.",
+  "dependency_lock": "See uv.lock for the Python 3.12 dependency resolution. TensorRT 10.3.0 nested NVIDIA binary downloads are not fully resolved or hashed by this lock.",
+  "python": "3.12.x",
+  "requirements": {
+    "torch": "2.4.1",
+    "torchvision": "0.19.1",
+    "onnx": "1.16.2",
+    "onnxscript": "0.1.0",
+    "onnxruntime": "1.18.1",
+    "numpy": "1.26.4",
+    "tensorrt": "10.3.0",
+    "cuda-python": "12.4.0",
+    "tritonclient[http,grpc]": "2.48.0"
+  },
+  "triton_server_image": "nvcr.io/nvidia/tritonserver:24.08-py3",
+  "cuda": {
+    "required": true,
+    "runtime": "CUDA 12.x compatible with TensorRT 10.3.0",
+    "driver": "record actual nvidia-smi driver in result environment"
+  },
+  "gpu": "NVIDIA GPU required for TensorRT/Triton measurements; record model, compute capability, and memory_bytes",
+  "schema_version": "1.0.0",
+  "command": "PYTHONPATH=src python -m inferbench.cli bench --batch 32 --iterations 100 --warmup 20 --out results",
+  "plan_command": "PYTHONPATH=src python -m inferbench.cli triton-repo --platform tensorrt_plan --plan artifacts/engines/resnet18-fp16-b32.plan --out model_repository",
+  "notes": [
+    "Benchmark results preserve raw timing samples in seconds.",
+    "Unavailable backends are skipped with a reason; no timing is estimated.",
+    "This manifest pins software but does not replace host driver and GPU prerequisites.",
+    "The pinned TensorRT 10.3.0 PyPI source metadata describes this release as intended for TensorRT-LLM; GPU package installation and compatibility have not been verified."
+  ]
+}
