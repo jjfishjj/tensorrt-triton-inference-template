@@ -53,6 +53,9 @@ dynamic_batching {{
   preferred_batch_size: [ {preferred} ]
   max_queue_delay_microseconds: {queue_delay}
 }}
+response_cache {{
+  enable: {response_cache}
+}}
 """
 
 
@@ -111,7 +114,9 @@ def copy_plan(source: Path, destination: Path) -> Path:
 
 def render_config(spec, max_batch_size: int = 32, instances: int = 1,
                   platform: str = "onnxruntime_onnx", kind: str = "KIND_GPU",
-                  queue_delay: int = 100) -> str:
+                  queue_delay: int = 100, response_cache: bool = False) -> str:
+    if queue_delay < 0:
+        raise ValueError("queue_delay must be non-negative")
     preferred = [b for b in (4, 8, 16, 32) if b <= max_batch_size] or [max_batch_size]
     return CONFIG.format(
         name=spec.name, platform=platform, max_batch=max_batch_size,
@@ -122,12 +127,14 @@ def render_config(spec, max_batch_size: int = 32, instances: int = 1,
         instances=instances, kind=kind,
         preferred=", ".join(str(b) for b in preferred),
         queue_delay=queue_delay,
+        response_cache=str(response_cache).lower(),
     )
 
 
 def write_repository(spec, root: Path, max_batch_size: int = 32,
                      instances: int = 1, platform: str = "onnxruntime_onnx",
-                     version: int = 1, plan_path: Path | None = None) -> Path:
+                     version: int = 1, plan_path: Path | None = None,
+                     queue_delay: int = 100, response_cache: bool = False) -> Path:
     root = Path(root)
     model_dir = root / spec.name
     (model_dir / str(version)).mkdir(parents=True, exist_ok=True)
@@ -143,6 +150,7 @@ def write_repository(spec, root: Path, max_batch_size: int = 32,
         raise ValueError(f"unsupported Triton platform: {platform}")
 
     (model_dir / "config.pbtxt").write_text(
-        render_config(spec, max_batch_size, instances, platform),
+        render_config(spec, max_batch_size, instances, platform,
+                      queue_delay=queue_delay, response_cache=response_cache),
         encoding="utf-8")
     return root

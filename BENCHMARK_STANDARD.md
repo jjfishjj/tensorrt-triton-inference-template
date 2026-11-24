@@ -13,10 +13,17 @@ The cuDF repository is the pilot for a common result contract used by the cuDF, 
 
 - Make inputs deterministic and record seed, input dimensions, and every material configuration in `parameters`.
 - Run CPU and GPU backends in separate fresh processes with the same seed, rows, and operation definitions. Do not compare different sizes or mix setup/transfer time into an operation timer without explicitly reporting it.
-- Report all measured samples in seconds, warm-up count, and median/mean/standard deviation/min/max. The default pilot uses one warm-up and five measured repetitions.
+- Report all measured samples in seconds, warm-up count, and median/mean/standard deviation/min/max plus p95 and p99 latency. Record the successful output rows used in throughput and per-inference metrics. Percentiles use the nearest-rank definition.
 - Synchronize the GPU before starting and after each timed operation; otherwise CUDA's asynchronous execution can make timings misleading.
 - Store the result as JSON conforming to `benchmark-results.schema.json`. Record the source commit and dirty working-tree state. Never fill missing measurements with estimates or publish a result as GPU-measured unless it was actually captured on a GPU.
 - For performance claims, preserve the raw result files and compare medians on the same hardware/software environment. Treat one-off values without raw samples and environment metadata as historical, not reproducible measurements.
+
+## Energy measurement
+
+- When available, use NVML's cumulative GPU energy counter, whose unit is millijoules, and record the measured counter delta, GPU identity, elapsed interval, and counter method. Unsupported devices/counters must be marked unavailable; do not substitute a short power sample or a model-based estimate.
+- Measure an idle baseline separately. Report raw GPU-board joules per successful inference and the idle-baseline-adjusted value as distinct metrics; never silently replace raw energy with the adjusted value.
+- NVML energy describes the physical GPU board and can include activity from other processes or co-tenants. It is not process-level energy or whole-system energy. Do not attribute a remote Triton server's GPU energy to a client-side GPU.
+- Keep CPU/host energy out of GPU-only measurements. Any broader system-energy comparison needs a separately identified, validated measurement source and power boundary.
 
 ## Result contract
 

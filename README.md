@@ -103,6 +103,64 @@ backend's `infer()` is required to synchronise before returning: `mps.synchroniz
 `cuda.synchronize`, `cudaStreamSynchronize` for TensorRT. Triton and ONNX Runtime
 are blocking already.
 
+## Green inference: energy per successful inference
+
+On a supported NVIDIA GPU, install `requirements-gpu.txt` and opt in to board
+energy measurement:
+
+```bash
+PYTHONPATH=src python -m inferbench.cli bench --model resnet18 --batch 32 \
+  --iterations 200 --warmup 30 --energy --energy-idle-seconds 5
+```
+
+The harness reads NVML's cumulative GPU energy counter in millijoules before and
+after the measured inference loop; it does not estimate from a short-window
+power reading. The optional `nvidia-ml-py` dependency is required. NVIDIA lists
+the counter as supported on Volta-or-newer fully supported devices; if the
+binding, driver, GPU, or counter is unavailable, the result says so and emits no
+energy number. See the [NVML device query reference](https://docs.nvidia.com/deploy/nvml-api/latest/api/group__nvmlDeviceQueries.html).
+
+Each successful run reports raw GPU-board joules per successful output row and,
+separately, an idle-baseline-adjusted value. The idle baseline is measured before
+the backend runs. NVML measures the *whole physical GPU*, so other processes or
+co-tenants can contribute; these are board-energy figures, not process-level or
+whole-system energy, and they do not include CPU, memory, or cooling power. A
+remote Triton server is not attributed to the client machine. Use
+`--assume-triton-local-gpu` only when Triton is actually running on the measured
+local GPU. Unsupported counters remain explicitly unavailable rather than
+falling back to approximate values.
+
+The run also reports p95 latency and exact successful inference rows. Model,
+batch, and native TensorRT FP32/FP16 rows are available in the existing
+harness. Triton queue delay is configurable with
+`triton-repo --max-queue-delay-us`; regenerate and restart the model repository
+for each queue-delay setting rather than treating it as a client-only request
+setting. Triton response caching requires both a model-side switch and a
+server-side cache allocation; the repository generator emits both when asked:
+
+```bash
+PYTHONPATH=src python -m inferbench.cli triton-repo --max-queue-delay-us 100 \
+  --response-cache --cache-size-bytes 268435456 --out model_repository
+```
+
+The benchmark supports deterministic `--request-pattern unique` (the default)
+and `--request-pattern repeat`. Use unique inputs for ordinary inference and
+repeat inputs to measure a hot-cache workload; warm-up requests use the same
+pattern, so repeated inputs are already cache hits when timing starts. For a
+Triton run, declare the server settings so they appear in JSON:
+
+```bash
+PYTHONPATH=src python -m inferbench.cli bench --only triton-http \
+  --request-pattern repeat --triton-response-cache enabled \
+  --triton-cache-size-bytes 268435456 --triton-max-queue-delay-us 100
+```
+
+These are declared server settings, not auto-discovered facts. The harness does
+not yet scrape Triton cache hit/miss metrics, so verify the server launch and
+use Triton metrics for hit-rate analysis. Response caching is appropriate for
+repeated requests; unique-input results are the cache-miss workload. Real GPU
+energy and cache-hit measurements remain follow-up work.
+
 ## The GPU path
 
 Both GPU backends are written and neither has been run in this checkout — there
@@ -162,6 +220,7 @@ src/inferbench/
     trt_backend.py    native engine build + execution        (CUDA only)
     triton_backend.py HTTP client                            (server required)
   bench.py            warm-up, percentiles, latency vs throughput
+  energy.py           NVML GPU-board energy counter; unavailable when unsupported
   accuracy.py         cross-backend agreement against the reference
   triton_repo.py      model repository + config.pbtxt
   report.py           the table, and the JSON behind it
@@ -188,9 +247,13 @@ reason and empty samples.
 - [x] Backend abstraction with honest availability reporting
 - [x] PyTorch (CPU/MPS/CUDA) and ONNX Runtime (4 providers) backends
 - [x] Latency percentiles, throughput, batch sweep
+- [x] p95 latency, successful output count, optional NVML GPU-board energy and idle baseline
+- [x] Triton dynamic-batching queue-delay configuration
+- [x] Triton model/server response-cache controls and repeat/unique input workloads
 - [x] Cross-backend accuracy comparison
 - [x] Triton model repository generation
 - [x] Unit tests, including GPU-free plan-copy tests
 - [ ] TensorRT and Triton rows measured on real hardware
+- [ ] Triton cache hit/miss telemetry and real GPU energy capture on a supported NVIDIA host
 - [ ] INT8 calibration against a real validation set
 - [ ] Nsight Systems trace capture alongside the timings

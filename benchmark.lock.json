@@ -12,7 +12,8 @@
     "numpy": "1.26.4",
     "tensorrt": "10.3.0",
     "cuda-python": "12.4.0",
-    "tritonclient[http,grpc]": "2.48.0"
+    "tritonclient[http,grpc]": "2.48.0",
+    "nvidia-ml-py": "13.615.71"
   },
   "triton_server_image": "nvcr.io/nvidia/tritonserver:24.08-py3",
   "cuda": {
@@ -23,11 +24,16 @@
   "gpu": "NVIDIA GPU required for TensorRT/Triton measurements; record model, compute capability, and memory_bytes",
   "schema_version": "1.0.0",
   "command": "PYTHONPATH=src python -m inferbench.cli bench --batch 32 --iterations 100 --warmup 20 --out results",
+  "energy_command": "PYTHONPATH=src python -m inferbench.cli bench --batch 32 --iterations 100 --warmup 20 --energy --energy-idle-seconds 5 --out results",
+  "cache_command": "PYTHONPATH=src python -m inferbench.cli triton-repo --max-queue-delay-us 100 --response-cache --cache-size-bytes 268435456 --out model_repository",
   "plan_command": "PYTHONPATH=src python -m inferbench.cli triton-repo --platform tensorrt_plan --plan artifacts/engines/resnet18-fp16-b32.plan --out model_repository",
   "notes": [
     "Benchmark results preserve raw timing samples in seconds.",
     "Unavailable backends are skipped with a reason; no timing is estimated.",
     "This manifest pins software but does not replace host driver and GPU prerequisites.",
+    "Energy is read from the NVML cumulative GPU-board counter; unsupported counters remain unavailable, and board readings include unrelated GPU activity.",
+    "CPU/host energy is not measured. Remote Triton energy is not attributed to the client GPU.",
+    "Cache benchmarks should record unique inputs for miss workloads or repeat inputs for hot-cache workloads; hit/miss metrics are not yet scraped by the harness.",
     "The pinned TensorRT 10.3.0 PyPI source metadata describes this release as intended for TensorRT-LLM; GPU package installation and compatibility have not been verified."
   ]
 }
