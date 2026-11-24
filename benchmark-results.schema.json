@@ -70,6 +70,7 @@
           "unit": { "const": "seconds" },
           "input_rows": { "type": "integer", "minimum": 0 },
           "output_rows": { "type": ["integer", "null"], "minimum": 0 },
+          "successful_inferences": { "type": "integer", "minimum": 0 },
           "warmup_iterations": { "type": "integer", "minimum": 0 },
           "samples": { "type": "array", "items": { "type": "number", "minimum": 0 } },
           "statistics": {
@@ -80,7 +81,31 @@
               "mean": { "type": ["number", "null"], "minimum": 0 },
               "stdev": { "type": ["number", "null"], "minimum": 0 },
               "min": { "type": ["number", "null"], "minimum": 0 },
-              "max": { "type": ["number", "null"], "minimum": 0 }
+              "max": { "type": ["number", "null"], "minimum": 0 },
+              "p95": { "type": ["number", "null"], "minimum": 0 },
+              "p99": { "type": ["number", "null"], "minimum": 0 },
+              "throughput_inferences_per_second": { "type": ["number", "null"], "minimum": 0 }
+            },
+            "additionalProperties": true
+          },
+          "energy": {
+            "type": "object",
+            "required": ["status", "scope"],
+            "properties": {
+              "status": { "enum": ["measured", "unavailable", "skipped", "failed", "not_applicable"] },
+              "scope": { "const": "gpu_board" },
+              "method": { "type": "string" },
+              "board_energy_joules": { "type": ["number", "null"], "minimum": 0 },
+              "joules_per_successful_inference": { "type": ["number", "null"], "minimum": 0 },
+              "idle_baseline_joules": { "type": ["number", "null"], "minimum": 0 },
+              "idle_baseline_duration_seconds": { "type": ["number", "null"], "minimum": 0 },
+              "idle_power_watts": { "type": ["number", "null"], "minimum": 0 },
+              "idle_adjusted_joules_per_successful_inference": { "type": ["number", "null"], "minimum": 0 },
+              "successful_inferences": { "type": "integer", "minimum": 0 },
+              "duration_seconds": { "type": ["number", "null"], "minimum": 0 },
+              "counter_reads": { "type": "integer", "minimum": 0 },
+              "reason": { "type": "string" },
+              "notes": { "type": "string" }
             },
             "additionalProperties": true
           },
