@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import statistics
+import stat
 import sys
 import tempfile
 import unittest
@@ -41,6 +42,15 @@ class PlanCopyTests(unittest.TestCase):
             source.write_bytes(b"TensorRT plan bytes\x00\xff")
             destination = copy_plan(source, root / "repo" / "resnet" / "1" / "model.plan")
             self.assertEqual(destination.read_bytes(), source.read_bytes())
+
+    def test_copy_preserves_source_permission_bits(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "source.plan"
+            source.write_bytes(b"plan")
+            source.chmod(0o644)
+            destination = copy_plan(source, root / "destination.plan")
+            self.assertEqual(stat.S_IMODE(destination.stat().st_mode), 0o644)
 
     def test_missing_source_fails(self):
         with tempfile.TemporaryDirectory() as tmp:

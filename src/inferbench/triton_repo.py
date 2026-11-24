@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import stat
 from pathlib import Path
 import tempfile
 
@@ -88,6 +89,7 @@ def copy_plan(source: Path, destination: Path) -> Path:
                 dst.write(chunk)
             dst.flush()
             os.fsync(dst.fileno())
+        os.chmod(temporary, stat.S_IMODE(source.stat().st_mode) & 0o777)
         copied_digest = hashlib.sha256()
         with temporary.open("rb") as copied:
             while chunk := copied.read(1024 * 1024):
