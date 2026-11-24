@@ -1,8 +1,8 @@
 # Verifiable on any machine, GPU or not. These four are all the CPU-side
 # harness needs: export a model, run it two ways, and compare.
-torch>=2.4
-onnx>=1.16
-onnxscript>=0.1        # torch>=2.9 exports ONNX through this
-onnxruntime>=1.18
-numpy>=1.26
-torchvision>=0.19
+torch==2.4.1
+onnx==1.16.2
+onnxscript==0.1.0
+onnxruntime==1.18.1
+numpy==1.26.4
+torchvision==0.19.1

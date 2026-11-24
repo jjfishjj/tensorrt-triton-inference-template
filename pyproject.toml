@@ -1,0 +1,28 @@
+[project]
+name = "tensorrt-triton-inference-template"
+version = "0.0.0"
+description = "GPU inference benchmark harness"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "torch==2.4.1",
+  "onnx==1.16.2",
+  "onnxscript==0.1.0",
+  "onnxruntime==1.18.1",
+  "numpy==1.26.4",
+  "torchvision==0.19.1",
+]
+
+[dependency-groups]
+dev = ["jsonschema==4.25.1"]
+gpu = [
+  "tensorrt==10.3.0",
+  "cuda-python==12.4.0",
+  "tritonclient[http,grpc]==2.48.0",
+]
+
+[tool.uv]
+constraint-dependencies = [
+  "tensorrt==10.3.0",
+  "cuda-python==12.4.0",
+  "tritonclient[http,grpc]==2.48.0",
+]

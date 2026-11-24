@@ -66,16 +66,9 @@ def _cmd_bench(args) -> int:
     print()
     print(report.table(results, accuracies, host, REFERENCE))
 
-    payload = {
-        "model": spec.name, "batch": args.batch, "iterations": args.iterations,
-        "warmup": args.warmup, "host": host, "reference": REFERENCE,
-        "results": [
-            {"backend": r.backend, "available": r.available, "reason": r.reason,
-             "error": r.error,
-             "latency": r.latency.as_dict() if r.latency else None}
-            for r in results],
-        "accuracy": {k: v.as_dict() for k, v in accuracies.items()},
-    }
+    payload = report.standard_payload(
+        spec.name, args.batch, args.iterations, args.warmup,
+        host, results, REFERENCE, accuracies)
     out = report.write_json(Path(args.out) / f"bench-b{args.batch}.json", payload)
     print(f"\nwrote {out}")
     return 0
@@ -86,7 +79,8 @@ def _cmd_triton_repo(args) -> int:
 
     spec = export_onnx(args.model, args.artifacts, opset=args.opset)
     root = write_repository(spec, Path(args.out), max_batch_size=args.max_batch,
-                            instances=args.instances, platform=args.platform)
+                            instances=args.instances, platform=args.platform,
+                            plan_path=args.plan)
     print(f"Triton model repository: {root}")
     print(f"  serve with:  docker run --gpus=all --rm -p8000-8002:8000-8002 \\\n"
           f"                 -v {root.resolve()}:/models "
@@ -123,6 +117,8 @@ def main(argv: list[str] | None = None) -> int:
     t.add_argument("--instances", default=1, type=int)
     t.add_argument("--platform", default="onnxruntime_onnx",
                    choices=["onnxruntime_onnx", "tensorrt_plan"])
+    t.add_argument("--plan", type=Path,
+                   help="source TensorRT engine plan; required with --platform tensorrt_plan")
     t.set_defaults(func=_cmd_triton_repo)
 
     args = p.parse_args(argv)
