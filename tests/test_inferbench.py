@@ -7,6 +7,8 @@ everywhere, and that the Triton config it writes says what Triton needs.
 """
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 import statistics
 import stat
@@ -14,6 +16,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -25,6 +28,7 @@ import jsonschema  # noqa: E402
 from inferbench.accuracy import AccuracyStats, compare  # noqa: E402
 from inferbench.backends import REFERENCE, TensorRTBackend, TorchBackend, all_backends  # noqa: E402
 from inferbench.bench import BenchResult, LatencyStats, measure, run_backend  # noqa: E402
+from inferbench.cli import main as cli_main  # noqa: E402
 from inferbench.energy import EnergyCapture, EnergyUnavailableError, NvidiaEnergyCounter  # noqa: E402
 from inferbench.model import build_torch_model, export_onnx  # noqa: E402
 from inferbench.report import energy_record, standard_payload  # noqa: E402
@@ -339,6 +343,35 @@ class RequestPatternTests(unittest.TestCase):
         measure(backend, self.FakeSpec(), batch=1, iterations=3,
                 warmup=1, request_pattern="unique")
         self.assertEqual(len({float(x[0, 0]) for x in backend.seen}), 4)
+
+
+class CliArgumentTests(unittest.TestCase):
+    def assert_cli_rejects(self, argv: list[str], option: str):
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr), self.assertRaises(SystemExit) as raised:
+            cli_main(argv)
+        self.assertEqual(raised.exception.code, 2)
+        self.assertIn(option, stderr.getvalue())
+        self.assertIn("non-negative", stderr.getvalue())
+
+    def test_negative_energy_gpu_is_rejected_by_argument_parser(self):
+        self.assert_cli_rejects(["bench", "--energy-gpu", "-1"], "--energy-gpu")
+
+    def test_negative_declared_cache_size_is_rejected_when_state_is_unknown(self):
+        self.assert_cli_rejects(
+            ["bench", "--triton-cache-size-bytes", "-1"], "--triton-cache-size-bytes")
+
+    def test_triton_repo_command_prints_server_cache_allocation(self):
+        fake_spec = type("Spec", (), {"name": "tinycnn"})()
+        output = io.StringIO()
+        with patch("inferbench.cli.export_onnx", return_value=fake_spec), \
+                patch("inferbench.triton_repo.write_repository",
+                      return_value=Path("/tmp/model_repository")):
+            with contextlib.redirect_stdout(output):
+                result = cli_main([
+                    "triton-repo", "--response-cache", "--cache-size-bytes", "4096"])
+        self.assertEqual(result, 0)
+        self.assertIn("--cache-config local,size=4096", output.getvalue())
 
 
 class TritonRepoTests(unittest.TestCase):

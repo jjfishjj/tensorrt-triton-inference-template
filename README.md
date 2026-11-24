@@ -155,11 +155,15 @@ PYTHONPATH=src python -m inferbench.cli bench --only triton-http \
   --triton-cache-size-bytes 268435456 --triton-max-queue-delay-us 100
 ```
 
-These are declared server settings, not auto-discovered facts. The harness does
-not yet scrape Triton cache hit/miss metrics, so verify the server launch and
-use Triton metrics for hit-rate analysis. Response caching is appropriate for
-repeated requests; unique-input results are the cache-miss workload. Real GPU
-energy and cache-hit measurements remain follow-up work.
+These are declared server settings, not auto-discovered facts. The current
+benchmark sends one blocking request at a time, so it does not exercise dynamic
+batching or measure queue-delay effects; `--triton-max-queue-delay-us` records
+the declared server setting only. Queue-delay comparisons require a concurrent-
+load benchmark, which is not implemented yet. The harness also does not scrape
+Triton cache hit/miss metrics, so verify the server launch and use Triton metrics
+for hit-rate analysis. Response caching is appropriate for repeated requests;
+unique-input results are the cache-miss workload. Real GPU energy and cache-hit
+measurements remain follow-up work.
 
 ## The GPU path
 

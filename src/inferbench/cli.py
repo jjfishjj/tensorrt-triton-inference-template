@@ -18,6 +18,16 @@ from .energy import EnergyUnavailableError, NvidiaEnergyCounter
 from .model import export_onnx
 
 
+def _non_negative_int(value: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("expected a non-negative integer") from exc
+    if parsed < 0:
+        raise argparse.ArgumentTypeError("must be non-negative")
+    return parsed
+
+
 def _cmd_export(args) -> int:
     spec = export_onnx(args.model, args.artifacts, opset=args.opset)
     print(f"exported {spec.name} -> {spec.onnx_path} "
@@ -164,7 +174,7 @@ def main(argv: list[str] | None = None) -> int:
                    help="use unique deterministic inputs or repeat one fixed batch each call")
     b.add_argument("--triton-response-cache", choices=["unknown", "disabled", "enabled"],
                    default="unknown", help="declared response-cache state of the running Triton server")
-    b.add_argument("--triton-cache-size-bytes", type=int,
+    b.add_argument("--triton-cache-size-bytes", type=_non_negative_int,
                    help="declared local Triton cache size for this benchmark run")
     b.add_argument("--triton-max-queue-delay-us", type=int,
                    help="declared running-server dynamic batching queue delay in microseconds")
@@ -172,7 +182,7 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--out", default=Path("results"), type=Path)
     b.add_argument("--energy", action="store_true",
                    help="measure NVIDIA GPU-board energy with the NVML cumulative counter")
-    b.add_argument("--energy-gpu", default=0, type=int,
+    b.add_argument("--energy-gpu", default=0, type=_non_negative_int,
                    help="NVIDIA GPU index for the energy counter (default: 0)")
     b.add_argument("--energy-idle-seconds", default=2.0, type=float,
                    help="idle baseline duration before measured runs (default: 2 seconds)")
@@ -188,7 +198,7 @@ def main(argv: list[str] | None = None) -> int:
                    help="Triton dynamic batching queue delay in microseconds (default: 100)")
     t.add_argument("--response-cache", action="store_true",
                    help="enable Triton response cache for the model and local server cache")
-    t.add_argument("--cache-size-bytes", default=0, type=int,
+    t.add_argument("--cache-size-bytes", default=0, type=_non_negative_int,
                    help="Triton local response-cache size in bytes (requires --response-cache)")
     t.add_argument("--platform", default="onnxruntime_onnx",
                    choices=["onnxruntime_onnx", "tensorrt_plan"])
